@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { useEditorStore } from '../store/useStore';
-import { Upload, Type, Layout, Image as ImageIcon, Download, Settings, Wand2, Type as FontIcon } from 'lucide-react';
+import { Upload, Type, Layout, Image as ImageIcon, Download, Settings, Type as FontIcon } from 'lucide-react';
 
 export const Sidebar = () => {
     const {
@@ -10,7 +10,6 @@ export const Sidebar = () => {
         updateBackground,
         setTemplate,
         templates,
-        setDimensions,
         updateEffects,
         setCustomFont,
         setCustomTitleColor,
