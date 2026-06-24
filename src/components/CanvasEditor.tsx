@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
-import { Stage, Layer, Text, Rect, Image as KonvaImage } from 'react-konva';
+import { Stage, Layer, Text, Rect, Image as KonvaImage, Group } from 'react-konva';
 import Konva from 'konva';
 import useImage from 'use-image';
 import { useEditorStore } from '../store/useStore';
@@ -18,12 +18,33 @@ const BackgroundImage = ({ src, width, height, blur, grain }: { src: string, wid
         }
     }, [image, blur, grain]);
 
+    // calculate crop
+    let crop = { x: 0, y: 0, width: 0, height: 0 };
+    if (image) {
+        const imgRatio = image.width / image.height;
+        const canvasRatio = width / height;
+        if (canvasRatio > imgRatio) {
+            // Canvas is wider than image. Fit to width.
+            crop.width = image.width;
+            crop.height = image.width / canvasRatio;
+            crop.x = 0;
+            crop.y = (image.height - crop.height) / 2;
+        } else {
+            // Canvas is taller than image. Fit to height.
+            crop.height = image.height;
+            crop.width = image.height * canvasRatio;
+            crop.y = 0;
+            crop.x = (image.width - crop.width) / 2;
+        }
+    }
+
     return (
         <KonvaImage
             ref={imageRef}
             image={image}
             width={width}
             height={height}
+            crop={image ? crop : undefined}
             filters={[Konva.Filters.Blur, Konva.Filters.Noise]}
             blurRadius={blur}
             noise={grain}
@@ -56,15 +77,18 @@ export const CanvasEditor = () => {
     useEffect(() => {
         const handleResize = () => {
             if (containerRef.current) {
-                const containerWidth = containerRef.current.offsetWidth;
-                const newScale = Math.min(containerWidth / SCENE_WIDTH, 1);
-                setScale(newScale); // Or create a smoother fit logic
+                const containerWidth = containerRef.current.offsetWidth - 64; // padding
+                const containerHeight = containerRef.current.offsetHeight - 64; // padding
+                const scaleX = containerWidth / SCENE_WIDTH;
+                const scaleY = containerHeight / SCENE_HEIGHT;
+                const newScale = Math.min(scaleX, scaleY, 1);
+                setScale(newScale);
             }
         };
         handleResize();
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    }, [SCENE_WIDTH, SCENE_HEIGHT]);
 
     // Helpers for positioning
     const getX = (percent: number) => percent * SCENE_WIDTH;
@@ -113,19 +137,25 @@ export const CanvasEditor = () => {
 
     return (
         <div
-            className="flex-1 flex items-center justify-center bg-zinc-900 p-8 overflow-hidden relative"
+            className="flex-1 flex items-center justify-center bg-transparent p-8 overflow-hidden relative"
             ref={containerRef}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
         >
-            <div className="shadow-2xl ring-1 ring-white/10" style={{ width: SCENE_WIDTH * scale, height: SCENE_HEIGHT * scale }}>
+            <div 
+                className="relative shadow-2xl shadow-black/50 rounded-lg overflow-hidden ring-1 ring-white/10"
+                style={{
+                    width: SCENE_WIDTH * scale,
+                    height: SCENE_HEIGHT * scale,
+                }}
+            >
                 <Stage ref={stageRef} width={SCENE_WIDTH * scale} height={SCENE_HEIGHT * scale} scaleX={scale} scaleY={scale}>
                     <Layer>
                         {/* Background */}
                         {renderBackground()}
 
                         {/* Overlay if present - IMPROVED: Always add a base overlay for better text contrast as requested */}
-                        <Rect width={SCENE_WIDTH} height={SCENE_HEIGHT} fill="black" opacity={0.4} />
+                        <Rect width={SCENE_WIDTH} height={SCENE_HEIGHT} fill="black" opacity={data.overlayOpacity ?? 0.4} />
 
                         {/* Additional template overlay */}
                         {template.background.overlay && (
@@ -146,8 +176,13 @@ export const CanvasEditor = () => {
                         )}
 
                         {/* Title */}
-                        {/* Title */}
                         <Text
+                            draggable
+                            onDragEnd={(e) => {
+                                const newX = Math.max(0, Math.min(e.target.x(), SCENE_WIDTH)) / SCENE_WIDTH * 100;
+                                const newY = Math.max(0, Math.min(e.target.y(), SCENE_HEIGHT)) / SCENE_HEIGHT * 100;
+                                useEditorStore.getState().setCustomTitlePosition(newX, newY);
+                            }}
                             text={data.title}
                             x={data.customTitlePosition ? getX(data.customTitlePosition.x / 100) : getX(template.title.x)}
                             y={data.customTitlePosition ? getY(data.customTitlePosition.y / 100) : getY(template.title.y)}
@@ -167,6 +202,26 @@ export const CanvasEditor = () => {
                         />
 
                         {/* Tracklist */}
+                        <Group
+                            draggable
+                            onDragEnd={(e) => {
+                                const groupX = e.target.x();
+                                const groupY = e.target.y();
+                                const currentBaseX = data.customTracklistStartPosition ? getX(data.customTracklistStartPosition.x / 100) : getX(template.tracklist.x);
+                                const currentBaseY = data.customTracklistStartPosition ? getY(data.customTracklistStartPosition.y / 100) : getY(template.tracklist.y);
+                                
+                                const newBaseX = currentBaseX + groupX;
+                                const newBaseY = currentBaseY + groupY;
+                                
+                                useEditorStore.getState().setCustomTracklistStartPosition(
+                                    (newBaseX / SCENE_WIDTH) * 100, 
+                                    (newBaseY / SCENE_HEIGHT) * 100
+                                );
+                                
+                                e.target.x(0);
+                                e.target.y(0);
+                            }}
+                        >
                         {data.tracklist.slice(0, 20).map((track, i) => {
                             const COLUMN_LIMIT = 10;
                             const col = Math.floor(i / COLUMN_LIMIT);
@@ -225,6 +280,7 @@ export const CanvasEditor = () => {
                                 />
                             );
                         })}
+                        </Group>
                     </Layer>
                 </Stage>
             </div>

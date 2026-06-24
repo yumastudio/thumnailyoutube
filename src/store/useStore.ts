@@ -22,6 +22,7 @@ interface EditorState {
     // New Features Actions
     setDimensions: (width: number, height: number, label: string) => void;
     updateEffects: (effects: Partial<EditorState['data']['effects']>) => void;
+    setOverlayOpacity: (opacity: number) => void;
     setCustomFont: (name: string, src: string) => void;
     setCustomTitleColor: (color: string) => void;
     setCustomTracklistColor: (color: string) => void;
@@ -45,6 +46,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         // New Features Defaults
         dimensions: { width: 1280, height: 720, label: 'YouTube Thumbnail' },
         effects: { blur: 0, grain: 0, vignette: 0 },
+        overlayOpacity: 0.4,
     },
     templates: defaultTemplates,
     selectedElement: null,
@@ -62,7 +64,19 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     })),
 
     setTemplate: (templateId) => set((state) => ({
-        data: { ...state.data, selectedTemplateId: templateId }
+        data: { 
+            ...state.data, 
+            selectedTemplateId: templateId,
+            customFont: undefined,
+            customTitleColor: undefined,
+            customTracklistColor: undefined,
+            customTitlePosition: undefined,
+            customTitleFontSize: undefined,
+            customTracklistStartPosition: undefined,
+            customTracklistFontSize: undefined,
+            effects: { blur: 0, grain: 0, vignette: 0 },
+            overlayOpacity: 0.4
+        }
     })),
 
     selectElement: (element) => set({ selectedElement: element }),
@@ -79,8 +93,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         data: { ...state.data, effects: { ...state.data.effects, ...newEffects } }
     })),
 
+    setOverlayOpacity: (opacity) => set((state) => ({
+        data: { ...state.data, overlayOpacity: opacity }
+    })),
+
     setCustomFont: (name, src) => set((state) => ({
-        data: { ...state.data, customFont: { name, src } }
+        data: { ...state.data, customFont: name ? { name, src } : undefined }
     })),
 
     setCustomTitleColor: (color) => set((state) => ({

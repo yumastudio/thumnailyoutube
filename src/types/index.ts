@@ -56,6 +56,7 @@ export interface ThumbnailData {
         grain: number; // 0-1
         vignette: number; // 0-1
     };
+    overlayOpacity?: number;
     customFont?: {
         name: string;
         src: string;

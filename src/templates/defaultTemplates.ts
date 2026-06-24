@@ -668,4 +668,240 @@ export const defaultTemplates: Template[] = [
             showNumbers: true,
         },
     },
+    {
+        id: "kpop-vibrant",
+        name: "K-Pop Vibrant",
+        category: "Pop",
+        background: {
+            type: "gradient",
+            value: "linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%)",
+        },
+        title: {
+            fontFamily: "'Inter', sans-serif",
+            fontSize: 90,
+            color: "#ffffff",
+            align: "center",
+            x: 0.5,
+            y: 0.2,
+            shadow: "3px 3px 0px #ff4b82",
+            uppercase: true,
+        },
+        tracklist: {
+            fontFamily: "'Nunito', sans-serif",
+            fontSize: 26,
+            color: "#882042",
+            align: "center",
+            x: 0.5,
+            y: 0.45,
+            lineHeight: 1.4,
+            limit: 10,
+            showNumbers: true,
+        },
+    },
+    {
+        id: "rnb-soul",
+        name: "R&B / Neo-Soul",
+        category: "R&B",
+        background: {
+            type: "color",
+            value: "#4a2511", // Deep warm brown
+            overlay: { color: "#1a0b05", opacity: 0.4 }
+        },
+        title: {
+            fontFamily: "'Playfair Display', serif",
+            fontSize: 85,
+            color: "#e6b89c",
+            align: "center",
+            x: 0.5,
+            y: 0.25,
+        },
+        tracklist: {
+            fontFamily: "'Montserrat', sans-serif",
+            fontSize: 22,
+            color: "#d4a373",
+            align: "center",
+            x: 0.5,
+            y: 0.45,
+            lineHeight: 1.6,
+            limit: 10,
+            showNumbers: false,
+        },
+    },
+    {
+        id: "reggae-dub",
+        name: "Reggae & Dub",
+        category: "Reggae",
+        background: {
+            type: "gradient",
+            value: "linear-gradient(to right, #009b3a, #fed100, #000000)", // Green, Yellow, Black (Jamaica vibes)
+            overlay: { color: "#000", opacity: 0.4 }
+        },
+        title: {
+            fontFamily: "'Anton', sans-serif",
+            fontSize: 95,
+            color: "#ffffff",
+            align: "center",
+            x: 0.5,
+            y: 0.2,
+            shadow: "4px 4px 0px #ce1126", // Red shadow
+            uppercase: true,
+        },
+        tracklist: {
+            fontFamily: "'Inter', sans-serif",
+            fontSize: 26,
+            color: "#f0f0f0",
+            align: "center",
+            x: 0.5,
+            y: 0.45,
+            lineHeight: 1.4,
+            limit: 10,
+            showNumbers: true,
+        },
+    },
+    {
+        id: "country-folk",
+        name: "Country & Folk",
+        category: "Acoustic",
+        background: {
+            type: "color",
+            value: "#8b5a2b", // Saddle brown
+        },
+        title: {
+            fontFamily: "'Cinzel', serif",
+            fontSize: 80,
+            color: "#f5deb3", // Wheat
+            align: "center",
+            x: 0.5,
+            y: 0.2,
+            shadow: "2px 2px 5px rgba(0,0,0,0.5)",
+        },
+        tracklist: {
+            fontFamily: "'Playfair Display', serif",
+            fontSize: 24,
+            color: "#ffebcd", // BlanchedAlmond
+            align: "center",
+            x: 0.5,
+            y: 0.45,
+            lineHeight: 1.5,
+            limit: 10,
+            showNumbers: true,
+        },
+    },
+    {
+        id: "cinematic-epic",
+        name: "Cinematic Epic",
+        category: "Mood",
+        background: {
+            type: "gradient",
+            value: "radial-gradient(circle, #2b4162 0%, #fa9c7a 100%)", // Blue to warm orange
+            overlay: { color: "#000", opacity: 0.6 }
+        },
+        title: {
+            fontFamily: "'Montserrat', sans-serif",
+            fontSize: 70,
+            color: "#ffffff",
+            align: "center",
+            x: 0.5,
+            y: 0.25,
+            uppercase: true,
+        },
+        tracklist: {
+            fontFamily: "'Inter', sans-serif",
+            fontSize: 20,
+            color: "#d0d0d0",
+            align: "center",
+            x: 0.5,
+            y: 0.45,
+            lineHeight: 1.8, // wide spacing for epic feel
+            limit: 10,
+            showNumbers: false,
+        },
+    },
+    {
+        id: "podcast-talk",
+        name: "Podcast / Talk Show",
+        category: "Minimal",
+        background: {
+            type: "color",
+            value: "#ececec",
+        },
+        title: {
+            fontFamily: "'Oswald', sans-serif",
+            fontSize: 85,
+            color: "#222222",
+            align: "left",
+            x: 0.05,
+            y: 0.15,
+            uppercase: true,
+        },
+        tracklist: {
+            fontFamily: "'Inter', sans-serif",
+            fontSize: 24,
+            color: "#444444",
+            align: "left",
+            x: 0.05,
+            y: 0.4,
+            lineHeight: 1.5,
+            limit: 10,
+            showNumbers: false,
+        },
+    },
+    {
+        id: "gospel-spiritual",
+        name: "Gospel & Spiritual",
+        category: "Mood",
+        background: {
+            type: "color",
+            value: "#ffffff",
+        },
+        title: {
+            fontFamily: "'Playfair Display', serif",
+            fontSize: 75,
+            color: "#bda27e", // Goldish
+            align: "center",
+            x: 0.5,
+            y: 0.25,
+        },
+        tracklist: {
+            fontFamily: "'Nunito', sans-serif",
+            fontSize: 22,
+            color: "#555555",
+            align: "center",
+            x: 0.5,
+            y: 0.45,
+            lineHeight: 1.6,
+            limit: 10,
+            showNumbers: true,
+        },
+    },
+    {
+        id: "punk-rock",
+        name: "Punk Rock Anarchy",
+        category: "Rock",
+        background: {
+            type: "color",
+            value: "#f2cd00", // Yellow
+        },
+        title: {
+            fontFamily: "'Metal Mania', system-ui",
+            fontSize: 110,
+            color: "#e60000", // Red
+            align: "left",
+            x: 0.05,
+            y: 0.2,
+            shadow: "4px 4px 0px #000000",
+            uppercase: true,
+        },
+        tracklist: {
+            fontFamily: "'Anton', sans-serif",
+            fontSize: 28,
+            color: "#000000",
+            align: "left",
+            x: 0.05,
+            y: 0.45,
+            lineHeight: 1.2,
+            limit: 10,
+            showNumbers: true,
+        },
+    }
 ];
