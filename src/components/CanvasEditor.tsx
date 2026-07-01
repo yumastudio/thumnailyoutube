@@ -89,7 +89,9 @@ export const CanvasEditor = () => {
 
     useEffect(() => {
         if (exportTrigger > 0 && stageRef.current) {
-            const uri = stageRef.current.toDataURL({ pixelRatio: 1 });
+            // Fix: Because the Stage is scaled down for display, we must increase pixelRatio 
+            // inversely so the final exported image matches the true SCENE_WIDTH/HEIGHT
+            const uri = stageRef.current.toDataURL({ pixelRatio: 1 / scale });
             const link = document.createElement('a');
             link.download = `thumbnail-${Date.now()}.png`;
             link.href = uri;
@@ -97,7 +99,7 @@ export const CanvasEditor = () => {
             link.click();
             document.body.removeChild(link);
         }
-    }, [exportTrigger]);
+    }, [exportTrigger, scale]);
 
     // Responsive scaling
     const containerRef = useRef<HTMLDivElement>(null);
