@@ -91,17 +91,51 @@ export const CanvasEditor = () => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [scale, setScale] = useState(1);
 
+    // Module-level variable to store the directory handle across renders during the session
+    const dirHandleRef = useRef<any>(null);
+
     useEffect(() => {
         if (exportTrigger > 0 && stageRef.current) {
-            // Fix: Because the Stage is scaled down for display, we must increase pixelRatio 
-            // inversely so the final exported image matches the true SCENE_WIDTH/HEIGHT
-            const uri = stageRef.current.toDataURL({ pixelRatio: 1 / scale });
-            const link = document.createElement('a');
-            link.download = `thumbnail-${Date.now()}.png`;
-            link.href = uri;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const doExport = async () => {
+                const uri = stageRef.current.toDataURL({ pixelRatio: 1 / scale });
+                const fileName = `thumbnail-${Date.now()}.png`;
+
+                try {
+                    // Modern File System Access API
+                    if ('showDirectoryPicker' in window) {
+                        if (!dirHandleRef.current) {
+                            dirHandleRef.current = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+                        }
+                        
+                        const fileHandle = await dirHandleRef.current.getFileHandle(fileName, { create: true });
+                        const writable = await fileHandle.createWritable();
+                        const response = await fetch(uri);
+                        const blob = await response.blob();
+                        await writable.write(blob);
+                        await writable.close();
+                        
+                        console.log(`Saved automatically to selected folder: ${fileName}`);
+                    } else {
+                        throw new Error("File System API not supported in this browser");
+                    }
+                } catch (err: any) {
+                    // Fallback to standard download if user cancels, denies permission, or API unsupported
+                    // If user manually cancelled the picker, err.name is 'AbortError'
+                    if (err.name !== 'AbortError') {
+                        console.log("Using fallback export method:", err);
+                        const link = document.createElement('a');
+                        link.download = fileName;
+                        link.href = uri;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    } else {
+                        // User cancelled the folder selection, do nothing or reset handle
+                        dirHandleRef.current = null;
+                    }
+                }
+            };
+            doExport();
         }
     }, [exportTrigger, scale]);
 
