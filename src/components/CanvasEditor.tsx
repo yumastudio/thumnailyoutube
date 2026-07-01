@@ -87,6 +87,10 @@ export const CanvasEditor = () => {
     const stageRef = useRef<any>(null);
     const { width: SCENE_WIDTH, height: SCENE_HEIGHT } = data.dimensions; 
 
+    // Responsive scaling
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [scale, setScale] = useState(1);
+
     useEffect(() => {
         if (exportTrigger > 0 && stageRef.current) {
             // Fix: Because the Stage is scaled down for display, we must increase pixelRatio 
@@ -100,10 +104,6 @@ export const CanvasEditor = () => {
             document.body.removeChild(link);
         }
     }, [exportTrigger, scale]);
-
-    // Responsive scaling
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [scale, setScale] = useState(1);
 
     useEffect(() => {
         const handleResize = () => {
