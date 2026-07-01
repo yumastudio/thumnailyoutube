@@ -3,12 +3,9 @@ import { Stage, Layer, Text, Rect, Image as KonvaImage, Group } from 'react-konv
 import Konva from 'konva';
 import useImage from 'use-image';
 import { useEditorStore } from '../store/useStore';
-// import { cn } from '../lib/utils';
+import type { Sticker } from '../types';
 
-// const SCENE_WIDTH = 1280;
-// const SCENE_HEIGHT = 720;
-
-const BackgroundImage = ({ src, width, height, blur, grain }: { src: string, width: number, height: number, blur: number, grain: number }) => {
+const BackgroundImage = ({ src, width, height, blur, grain, brightness, contrast, saturation }: any) => {
     const [image] = useImage(src);
     const imageRef = useRef<any>(null);
 
@@ -16,7 +13,7 @@ const BackgroundImage = ({ src, width, height, blur, grain }: { src: string, wid
         if (imageRef.current) {
             imageRef.current.cache();
         }
-    }, [image, blur, grain]);
+    }, [image, blur, grain, brightness, contrast, saturation]);
 
     // calculate crop
     let crop = { x: 0, y: 0, width: 0, height: 0 };
@@ -24,13 +21,11 @@ const BackgroundImage = ({ src, width, height, blur, grain }: { src: string, wid
         const imgRatio = image.width / image.height;
         const canvasRatio = width / height;
         if (canvasRatio > imgRatio) {
-            // Canvas is wider than image. Fit to width.
             crop.width = image.width;
             crop.height = image.width / canvasRatio;
             crop.x = 0;
             crop.y = (image.height - crop.height) / 2;
         } else {
-            // Canvas is taller than image. Fit to height.
             crop.height = image.height;
             crop.width = image.height * canvasRatio;
             crop.y = 0;
@@ -45,18 +40,52 @@ const BackgroundImage = ({ src, width, height, blur, grain }: { src: string, wid
             width={width}
             height={height}
             crop={image ? crop : undefined}
-            filters={[Konva.Filters.Blur, Konva.Filters.Noise]}
+            filters={[Konva.Filters.Blur, Konva.Filters.Noise, Konva.Filters.Brighten, Konva.Filters.Contrast, Konva.Filters.HSL]}
             blurRadius={blur}
             noise={grain}
+            brightness={brightness}
+            contrast={contrast}
+            hslSaturation={saturation}
+        />
+    );
+};
+
+const StickerLayer = ({ sticker, onDragEnd }: { sticker: Sticker, onDragEnd: (e: any) => void }) => {
+    const [image] = useImage(sticker.url);
+    if (!image) return null;
+
+    // Auto-scale to a reasonable default size if the image is too large
+    const MAX_SIZE = 250;
+    let w = image.width;
+    let h = image.height;
+    if (w > MAX_SIZE || h > MAX_SIZE) {
+        const ratio = Math.min(MAX_SIZE / w, MAX_SIZE / h);
+        w *= ratio;
+        h *= ratio;
+    }
+
+    return (
+        <KonvaImage
+            image={image}
+            x={sticker.x}
+            y={sticker.y}
+            width={w}
+            height={h}
+            scaleX={sticker.scale}
+            scaleY={sticker.scale}
+            rotation={sticker.rotation}
+            draggable
+            onDragEnd={onDragEnd}
         />
     );
 };
 
 export const CanvasEditor = () => {
-    const { data, getCurrentTemplate, exportTrigger, updateBackground } = useEditorStore();
+    const store = useEditorStore();
+    const { data, getCurrentTemplate, exportTrigger, updateBackground, updateSticker } = store;
     const template = getCurrentTemplate();
     const stageRef = useRef<any>(null);
-    const { width: SCENE_WIDTH, height: SCENE_HEIGHT } = data.dimensions; // Dynamic Dimensions
+    const { width: SCENE_WIDTH, height: SCENE_HEIGHT } = data.dimensions; 
 
     useEffect(() => {
         if (exportTrigger > 0 && stageRef.current) {
@@ -77,8 +106,8 @@ export const CanvasEditor = () => {
     useEffect(() => {
         const handleResize = () => {
             if (containerRef.current) {
-                const containerWidth = containerRef.current.offsetWidth - 64; // padding
-                const containerHeight = containerRef.current.offsetHeight - 64; // padding
+                const containerWidth = containerRef.current.offsetWidth - 64; 
+                const containerHeight = containerRef.current.offsetHeight - 64; 
                 const scaleX = containerWidth / SCENE_WIDTH;
                 const scaleY = containerHeight / SCENE_HEIGHT;
                 const newScale = Math.min(scaleX, scaleY, 1);
@@ -121,19 +150,22 @@ export const CanvasEditor = () => {
                     height={SCENE_HEIGHT}
                     blur={data.effects.blur}
                     grain={data.effects.grain}
+                    brightness={data.effects.brightness}
+                    contrast={data.effects.contrast}
+                    saturation={data.effects.saturation}
                 />
             );
         }
 
-        // In a real app, 'template.background.value' might be a specific image url or gradient
-        // For now simple color rect
         if (template.background.type === 'color' || template.background.type === 'gradient') {
             return <Rect width={SCENE_WIDTH} height={SCENE_HEIGHT} fill={template.background.value} />;
         }
 
-        // Placeholder for template image
         return <Rect width={SCENE_WIDTH} height={SCENE_HEIGHT} fill="#333" />;
     };
+
+    const titleAlign = data.customTitleAlign || template.title.align;
+    const tracklistAlign = data.customTracklistAlign || template.tracklist.align;
 
     return (
         <div
@@ -143,18 +175,15 @@ export const CanvasEditor = () => {
             onDrop={handleDrop}
         >
             <div 
-                className="relative shadow-2xl shadow-black/50 rounded-lg overflow-hidden ring-1 ring-white/10"
-                style={{
-                    width: SCENE_WIDTH * scale,
-                    height: SCENE_HEIGHT * scale,
-                }}
+                className="relative shadow-[0_0_80px_-20px_rgba(139,92,246,0.3)] rounded-lg overflow-hidden ring-1 ring-white/20 transition-transform duration-500 hover:scale-[1.01]"
+                style={{ width: SCENE_WIDTH * scale, height: SCENE_HEIGHT * scale }}
             >
                 <Stage ref={stageRef} width={SCENE_WIDTH * scale} height={SCENE_HEIGHT * scale} scaleX={scale} scaleY={scale}>
                     <Layer>
                         {/* Background */}
                         {renderBackground()}
 
-                        {/* Overlay if present - IMPROVED: Always add a base overlay for better text contrast as requested */}
+                        {/* Base overlay for contrast */}
                         <Rect width={SCENE_WIDTH} height={SCENE_HEIGHT} fill="black" opacity={data.overlayOpacity ?? 0.4} />
 
                         {/* Additional template overlay */}
@@ -175,13 +204,22 @@ export const CanvasEditor = () => {
                             />
                         )}
 
+                        {/* Stickers */}
+                        {data.stickers.map(sticker => (
+                            <StickerLayer 
+                                key={sticker.id} 
+                                sticker={sticker} 
+                                onDragEnd={(e) => updateSticker(sticker.id, { x: e.target.x(), y: e.target.y() })} 
+                            />
+                        ))}
+
                         {/* Title */}
                         <Text
                             draggable
                             onDragEnd={(e) => {
                                 const newX = Math.max(0, Math.min(e.target.x(), SCENE_WIDTH)) / SCENE_WIDTH * 100;
                                 const newY = Math.max(0, Math.min(e.target.y(), SCENE_HEIGHT)) / SCENE_HEIGHT * 100;
-                                useEditorStore.getState().setCustomTitlePosition(newX, newY);
+                                store.setCustomTitlePosition(newX, newY);
                             }}
                             text={data.title}
                             x={data.customTitlePosition ? getX(data.customTitlePosition.x / 100) : getX(template.title.x)}
@@ -189,15 +227,17 @@ export const CanvasEditor = () => {
                             fontSize={data.customTitleFontSize || template.title.fontSize}
                             fontFamily={data.customFont ? data.customFont.name : template.title.fontFamily}
                             fill={data.customTitleColor || template.title.color}
-                            align={template.title.align}
-                            width={SCENE_WIDTH} // Allow full width for centering? Or calc based on align
-                            offsetX={template.title.align === 'center' ? SCENE_WIDTH / 2 : template.title.align === 'right' ? SCENE_WIDTH : 0}
+                            align={titleAlign}
+                            width={SCENE_WIDTH} 
+                            offsetX={titleAlign === 'center' ? SCENE_WIDTH / 2 : titleAlign === 'right' ? SCENE_WIDTH : 0}
                             fontStyle="bold"
-                            shadowColor="black"
-                            shadowBlur={20}
+                            shadowColor={data.customTitleShadowColor || "black"}
+                            shadowBlur={data.customTitleShadowBlur ?? 20}
                             shadowOpacity={0.9}
                             shadowOffsetX={4}
                             shadowOffsetY={4}
+                            stroke={data.customTitleStrokeColor}
+                            strokeWidth={data.customTitleStrokeWidth}
                             wrap="word"
                         />
 
@@ -213,7 +253,7 @@ export const CanvasEditor = () => {
                                 const newBaseX = currentBaseX + groupX;
                                 const newBaseY = currentBaseY + groupY;
                                 
-                                useEditorStore.getState().setCustomTracklistStartPosition(
+                                store.setCustomTracklistStartPosition(
                                     (newBaseX / SCENE_WIDTH) * 100, 
                                     (newBaseY / SCENE_HEIGHT) * 100
                                 );
@@ -228,34 +268,24 @@ export const CanvasEditor = () => {
                             const row = i % COLUMN_LIMIT;
                             const isMultiColumn = data.tracklist.length > COLUMN_LIMIT;
 
-                            let align = template.tracklist.align;
                             let width = SCENE_WIDTH;
-                            let offsetX = align === 'center' ? SCENE_WIDTH / 2 : align === 'right' ? width : 0;
+                            let offsetX = tracklistAlign === 'center' ? SCENE_WIDTH / 2 : tracklistAlign === 'right' ? width : 0;
                             let x = getX(template.tracklist.x);
 
                             if (isMultiColumn) {
-                                // Explicitly split into 2 equal columns for 1-10 (Col 0) and 11-20 (Col 1)
-                                width = (SCENE_WIDTH / 2) - 80; // Width of each column with padding
-
-                                // Calculate base X for column
-                                // Col 0 centers in left half (25%), Col 1 centers in right half (75%)
+                                width = (SCENE_WIDTH / 2) - 80; 
                                 const colCenter = col === 0 ? SCENE_WIDTH * 0.25 : SCENE_WIDTH * 0.75;
-
-                                if (align === 'center') {
+                                if (tracklistAlign === 'center') {
                                     x = colCenter;
                                     offsetX = width / 2;
-                                } else if (align === 'left') {
-                                    // Left align relative to the column start
-                                    // Col 0 starts at ~50px, Col 1 starts at center + 50px
+                                } else if (tracklistAlign === 'left') {
                                     const colStart = col === 0 ? 50 : (SCENE_WIDTH / 2) + 50;
                                     x = colStart;
                                     offsetX = 0;
-                                } else { // right
-                                    // Right align relative to column end
-                                    // Col 0 ends at center - 50px, Col 1 ends at width - 50px
+                                } else { 
                                     const colEnd = col === 0 ? (SCENE_WIDTH / 2) - 50 : SCENE_WIDTH - 50;
                                     x = colEnd;
-                                    offsetX = width; // Text is drawn from x, so offset by width to align right edge
+                                    offsetX = width; 
                                 }
                             }
 
@@ -265,15 +295,14 @@ export const CanvasEditor = () => {
                                     text={`${template.tracklist.showNumbers ? String(i + 1).padStart(2, '0') + '. ' : ''}${track}`}
                                     x={data.customTracklistStartPosition ? (isMultiColumn ? x : getX(data.customTracklistStartPosition.x / 100)) : x}
                                     y={(data.customTracklistStartPosition ? getY(data.customTracklistStartPosition.y / 100) : getY(template.tracklist.y)) + (row * (data.customTracklistFontSize || template.tracklist.fontSize) * template.tracklist.lineHeight)}
-                                    // Note: Manual X override is tricky with multicolumn logic, for now applied simple X override if single column or handled above
                                     fontSize={data.customTracklistFontSize || template.tracklist.fontSize}
                                     fontFamily={data.customFont ? data.customFont.name : template.tracklist.fontFamily}
                                     fill={data.customTracklistColor || template.tracklist.color}
-                                    align={align}
+                                    align={tracklistAlign}
                                     width={width}
                                     offsetX={offsetX}
-                                    shadowColor="black"
-                                    shadowBlur={10}
+                                    shadowColor={data.customTracklistShadowColor || "black"}
+                                    shadowBlur={data.customTracklistShadowBlur ?? 10}
                                     shadowOpacity={0.8}
                                     shadowOffsetX={2}
                                     shadowOffsetY={2}

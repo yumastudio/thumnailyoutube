@@ -37,6 +37,15 @@ export interface Template {
     };
 }
 
+export interface Sticker {
+    id: string;
+    url: string; // Data URL
+    x: number;
+    y: number;
+    scale: number;
+    rotation: number;
+}
+
 export interface ThumbnailData {
     title: string;
     tracklist: string[];
@@ -55,6 +64,9 @@ export interface ThumbnailData {
         blur: number;
         grain: number; // 0-1
         vignette: number; // 0-1
+        brightness: number; // -1 to 1, default 0
+        contrast: number; // -100 to 100, default 0
+        saturation: number; // -1 to 1, default 0
     };
     overlayOpacity?: number;
     customFont?: {
@@ -64,6 +76,18 @@ export interface ThumbnailData {
     // Custom Overrides
     customTitlePosition?: { x: number; y: number }; // Percentage 0-1
     customTitleFontSize?: number;
+    customTitleAlign?: 'left' | 'center' | 'right';
+    customTitleShadowColor?: string;
+    customTitleShadowBlur?: number;
+    customTitleStrokeColor?: string;
+    customTitleStrokeWidth?: number;
+
     customTracklistStartPosition?: { x: number; y: number }; // Percentage 0-1
     customTracklistFontSize?: number;
+    customTracklistAlign?: 'left' | 'center' | 'right';
+    customTracklistShadowColor?: string;
+    customTracklistShadowBlur?: number;
+
+    // Stickers
+    stickers: Sticker[];
 }

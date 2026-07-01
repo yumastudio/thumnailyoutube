@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { ThumbnailData, Template } from '../types';
+import type { ThumbnailData, Template, Sticker } from '../types';
 import { defaultTemplates } from '../templates/defaultTemplates';
 
 interface EditorState {
@@ -30,6 +30,15 @@ interface EditorState {
     setCustomTitleFontSize: (size: number) => void;
     setCustomTracklistStartPosition: (x: number, y: number) => void;
     setCustomTracklistFontSize: (size: number) => void;
+
+    // Advanced Text Formatting
+    setCustomTitleFormatting: (updates: Partial<ThumbnailData>) => void;
+    setCustomTracklistFormatting: (updates: Partial<ThumbnailData>) => void;
+
+    // Stickers
+    addSticker: (sticker: Sticker) => void;
+    updateSticker: (id: string, updates: Partial<Sticker>) => void;
+    removeSticker: (id: string) => void;
 }
 
 export const useEditorStore = create<EditorState>((set, get) => ({
@@ -45,8 +54,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         selectedTemplateId: defaultTemplates[0].id,
         // New Features Defaults
         dimensions: { width: 1280, height: 720, label: 'YouTube Thumbnail' },
-        effects: { blur: 0, grain: 0, vignette: 0 },
+        effects: { blur: 0, grain: 0, vignette: 0, brightness: 0, contrast: 0, saturation: 0 },
         overlayOpacity: 0.4,
+        stickers: [],
     },
     templates: defaultTemplates,
     selectedElement: null,
@@ -56,7 +66,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     })),
 
     updateTracklist: (text) => set((state) => ({
-        data: { ...state.data, tracklist: text.split('\n').filter(line => line.trim() !== '') }
+        data: { ...state.data, tracklist: text.split('\n') }
     })),
 
     updateBackground: (image) => set((state) => ({
@@ -74,8 +84,17 @@ export const useEditorStore = create<EditorState>((set, get) => ({
             customTitleFontSize: undefined,
             customTracklistStartPosition: undefined,
             customTracklistFontSize: undefined,
-            effects: { blur: 0, grain: 0, vignette: 0 },
-            overlayOpacity: 0.4
+            customTitleAlign: undefined,
+            customTitleShadowColor: undefined,
+            customTitleShadowBlur: undefined,
+            customTitleStrokeColor: undefined,
+            customTitleStrokeWidth: undefined,
+            customTracklistAlign: undefined,
+            customTracklistShadowColor: undefined,
+            customTracklistShadowBlur: undefined,
+            effects: { blur: 0, grain: 0, vignette: 0, brightness: 0, contrast: 0, saturation: 0 },
+            overlayOpacity: 0.4,
+            stickers: []
         }
     })),
 
@@ -123,6 +142,32 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
     setCustomTracklistFontSize: (size) => set((state) => ({
         data: { ...state.data, customTracklistFontSize: size }
+    })),
+
+    setCustomTitleFormatting: (updates) => set((state) => ({
+        data: { ...state.data, ...updates }
+    })),
+
+    setCustomTracklistFormatting: (updates) => set((state) => ({
+        data: { ...state.data, ...updates }
+    })),
+
+    addSticker: (sticker) => set((state) => ({
+        data: { ...state.data, stickers: [...state.data.stickers, sticker] }
+    })),
+
+    updateSticker: (id, updates) => set((state) => ({
+        data: {
+            ...state.data,
+            stickers: state.data.stickers.map(s => s.id === id ? { ...s, ...updates } : s)
+        }
+    })),
+
+    removeSticker: (id) => set((state) => ({
+        data: {
+            ...state.data,
+            stickers: state.data.stickers.filter(s => s.id !== id)
+        }
     })),
 
     getCurrentTemplate: () => {
